@@ -1,0 +1,316 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 280 100% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 280 100% 20%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 280 100% 20%;
+ 
+    --primary: 280 100% 50%;
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 45 100% 50%;
+    --secondary-foreground: 280 100% 20%;
+ 
+    --muted: 160 100% 90%;
+    --muted-foreground: 280 100% 20%;
+ 
+    --accent: 320 100% 50%;
+    --accent-foreground: 0 0% 100%;
+ 
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 280 100% 90%;
+    --input: 280 100% 90%;
+    --ring: 280 100% 50%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 280 100% 10%;
+    --foreground: 0 0% 100%;
+ 
+    --card: 280 100% 15%;
+    --card-foreground: 0 0% 100%;
+ 
+    --popover: 280 100% 15%;
+    --popover-foreground: 0 0% 100%;
+ 
+    --primary: 320 100% 50%;
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 45 100% 50%;
+    --secondary-foreground: 280 100% 10%;
+ 
+    --muted: 160 100% 20%;
+    --muted-foreground: 0 0% 100%;
+ 
+    --accent: 280 100% 50%;
+    --accent-foreground: 0 0% 100%;
+ 
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+ 
+    --border: 280 100% 20%;
+    --input: 280 100% 20%;
+    --ring: 320 100% 50%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background: linear-gradient(135deg, 
+      hsl(280, 100%, 95%) 0%,
+      hsl(320, 100%, 95%) 50%,
+      hsl(45, 100%, 95%) 100%
+    );
+    min-height: 100vh;
+  }
+}
+
+/* Animaciones y estilos para el sorteo */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes fadeOut {
+  from { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+  to { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
+
+.message-container {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.message {
+  animation: fadeIn 0.8s ease-out forwards;
+  text-align: center;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  transform-origin: center;
+}
+
+.message.fade-out {
+  animation: fadeOut 0.8s ease-out forwards;
+}
+
+.message-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: hsl(280, 100%, 50%);
+  margin-bottom: 0.75rem;
+}
+
+.message-content {
+  font-size: 1.25rem;
+  color: hsl(280, 100%, 20%);
+}
+
+.progress-container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  margin-top: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: hsl(280, 100%, 90%);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, hsl(280, 100%, 50%), hsl(320, 100%, 50%));
+  width: 0%;
+  transition: width 0.3s ease-out;
+}
+
+.progress-text {
+  position: absolute;
+  right: 0;
+  top: -25px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: hsl(280, 100%, 50%);
+}
+
+.loading-dots {
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+.loading-dots::after {
+  content: '...';
+  animation: dots 1.5s infinite;
+}
+
+.winner-email {
+  transition: all 0.3s ease;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.winner-email.blurred {
+  filter: blur(8px);
+  -webkit-filter: blur(8px);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
+}
+
+.winner-email.blurred:hover {
+  filter: blur(4px);
+  -webkit-filter: blur(4px);
+}
+
+/* Estilo para el botón de mostrar/ocultar */
+
+
+.winner-email + button:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para botones */
+button {
+  background: linear-gradient(135deg, 
+    hsl(280, 100%, 50%) 0%,
+    hsl(320, 100%, 50%) 100%
+  );
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, 
+    hsl(320, 100%, 50%) 0%,
+    hsl(280, 100%, 50%) 100%
+  );
+}
+
+button:focus {
+  outline: none;
+  ring: 2px solid hsl(280, 100%, 50%);
+  ring-offset: 2px;
+}
+
+/* Estilos para el contenedor principal */
+.container {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+/* Estilos para inputs y textareas */
+input[type="text"],
+input[type="email"],
+textarea {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid hsl(280, 100%, 90%);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus {
+  border-color: hsl(280, 100%, 50%);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+  outline: none;
+}
+
+/* Estilos para el botón de copiar */
+.copy-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.copy-button .copy-text,
+.copy-button .copy-success {
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.copy-button .copy-success {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+
+.copy-button .hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.copy-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+} 

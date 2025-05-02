@@ -1,11 +1,362 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Sorteo de Rifas">
+	<main class="container mx-auto px-4 py-8 h-[80vh] mt-10">
+		<h1 class="text-4xl font-bold text-center mb-8">¡Bienvenido al Sorteo!</h1>
+		
+		<div class="max-w-2xl mx-auto rounded-lg p-6">
+			<h2 class="text-2xl font-semibold mb-4">¿Cómo desea cargar la lista de participantes?</h2>
+			
+			<div class="space-y-4">
+				<div class="flex items-center space-x-4">
+					<input type="radio" id="textarea" name="loadType" value="textarea" class="h-4 w-4 text-blue-600" checked>
+					<label for="textarea" class="text-lg">Ingresar correos directamente</label>
+				</div>
+				
+				<div class="flex items-center space-x-4">
+					<input type="radio" id="file" name="loadType" value="file" class="h-4 w-4 text-blue-600">
+					<label for="file" class="text-lg">Subir archivo</label>
+				</div>
+			</div>
+
+			<div id="textareaContainer" class="mt-6">
+				<label for="emails" class="block text-sm font-medium text-gray-700 mb-2">Ingrese los correos (uno por línea)</label>
+				<textarea
+					id="emails"
+					rows="6"
+					class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+					placeholder="ejemplo1@correo.com&#10;ejemplo2@correo.com&#10;ejemplo3@correo.com"
+				></textarea>
+			</div>
+
+			<div id="fileContainer" class="mt-6 hidden">
+				<label for="fileInput" class="block text-sm font-medium text-gray-700 mb-2">Seleccione un archivo</label>
+				<input
+					type="file"
+					id="fileInput"
+					accept=".txt,.csv"
+					class="block w-full text-sm text-gray-500
+						file:mr-4 file:py-2 file:px-4
+						file:rounded-md file:border-0
+						file:text-sm file:font-semibold
+						file:bg-blue-50 file:text-blue-700
+						hover:file:bg-blue-100"
+				>
+			</div>
+
+			<div class="mt-6 flex items-center space-x-2">
+				<input type="checkbox" id="visualProtection" class="h-4 w-4 text-blue-600 rounded border-gray-300">
+				<label for="visualProtection" class="text-sm text-gray-700">Proteger visualmente el correo del ganador</label>
+			</div>
+
+			<button
+				id="submitButton"
+				class="mt-6 font-bold w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+			>
+				Realizar Sorteo
+			</button>
+		</div>
+	</main>
+
+	<script>
+		// Función para validar correos electrónicos
+		function validateEmail(email: string): boolean {
+			const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			return re.test(email);
+		}
+
+		// Función para mezclar aleatoriamente un array (Fisher-Yates shuffle)
+		function shuffleArray<T>(array: T[]): T[] {
+			const shuffled = [...array];
+			for (let i = shuffled.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+			}
+			return shuffled;
+		}
+
+		// Función para realizar el sorteo de manera justa
+		function realizarSorteo(emails: string[]): string {
+			// Mezclamos la lista de correos
+			const emailsMezclados = shuffleArray(emails);
+			
+			// Generamos un número aleatorio usando crypto.getRandomValues para mayor aleatoriedad
+			const array = new Uint32Array(1);
+			window.crypto.getRandomValues(array);
+			const randomIndex = array[0] % emailsMezclados.length;
+			
+			return emailsMezclados[randomIndex];
+		}
+
+		// Función para mostrar la animación de carga
+		async function mostrarAnimacionCarga(emails: string[]) {
+			const main = document.querySelector('main');
+			if (!main) return;
+
+			// Guardar el estado del checkbox antes de reemplazar el contenido
+			const visualProtection = document.getElementById('visualProtection') as HTMLInputElement;
+			const isProtected = visualProtection?.checked || false;
+
+			const messages = [
+				{ title: "¡Comienza el sorteo!", content: "Preparando todo para la selección" },
+				{ title: "Combinando participantes", content: "Mezclando la lista de correos" },
+				{ title: "Aplicando algoritmo", content: "Utilizando el método Fisher-Yates" },
+				{ title: "Generando aleatoriedad", content: "Usando números criptográficamente seguros" },
+				{ title: "¡Un momento más!", content: "Seleccionando al ganador" }
+			];
+
+			let currentMessage = 0;
+			const messageInterval = 2000; // 2 segundos por mensaje
+			const totalTime = messageInterval * messages.length;
+
+			main.innerHTML = `
+				<div class="h-full flex items-center justify-center w-full">
+					<div class="w-full max-w-2xl mx-auto  p-6 text-center">
+						<div class="message-container">
+							<div class="message">
+								<div class="message-title">${messages[0].title}</div>
+								<div class="message-content">${messages[0].content}<span class="loading-dots"></span></div>
+							</div>
+							<div class="progress-container">
+								<div class="progress-text">0%</div>
+								<div class="progress-bar">
+									<div class="progress-bar-fill"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			`;
+
+			const messageElement = document.querySelector('.message') as HTMLElement;
+			const progressBarFill = document.querySelector('.progress-bar-fill') as HTMLElement;
+			const progressText = document.querySelector('.progress-text') as HTMLElement;
+
+			// Función para actualizar el progreso
+			const updateProgress = () => {
+				const progress = (currentMessage / (messages.length - 1)) * 100;
+				progressBarFill.style.width = `${progress}%`;
+				progressText.textContent = `${Math.round(progress)}%`;
+			};
+
+			const interval = setInterval(() => {
+				currentMessage++;
+				if (currentMessage < messages.length) {
+					// Agregar clase de fade-out al mensaje actual
+					messageElement.classList.add('fade-out');
+					
+					setTimeout(() => {
+						messageElement.innerHTML = `
+							<div class="message-title">${messages[currentMessage].title}</div>
+							<div class="message-content">${messages[currentMessage].content}<span class="loading-dots"></span></div>
+						`;
+						messageElement.classList.remove('fade-out');
+						updateProgress();
+					}, 800); // Tiempo de la animación de fade-out
+				} else {
+					clearInterval(interval);
+				}
+			}, messageInterval);
+
+			// Actualizar el progreso cada 100ms para una animación más suave
+			const progressInterval = setInterval(() => {
+				const elapsed = Date.now() - startTime;
+				const progress = Math.min((elapsed / totalTime) * 100, 100);
+				progressBarFill.style.width = `${progress}%`;
+				progressText.textContent = `${Math.round(progress)}%`;
+				
+				if (progress >= 100) {
+					clearInterval(progressInterval);
+				}
+			}, 100);
+
+			const startTime = Date.now();
+
+			// Esperar a que termine la animación y mostrar el resultado
+			setTimeout(() => {
+				const ganador = realizarSorteo(emails);
+				mostrarResultado(ganador, isProtected);
+			}, totalTime);
+		}
+
+		// Función para mostrar el resultado
+		async function mostrarResultado(ganador: string, isProtected: boolean) {
+			const main = document.querySelector('main');
+			if (!main) return;
+
+			// Importar y ejecutar el confeti
+			const confetti = await import('canvas-confetti');
+			
+			// Configurar el confeti
+			const defaults = {
+				spread: 360,
+				ticks: 100,
+				gravity: 0,
+				decay: 0.94,
+				startVelocity: 30,
+				shapes: ['star'],
+				colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+			};
+
+			// Función para disparar el confeti
+			function shoot() {
+				confetti.default({
+					...defaults,
+					particleCount: 40,
+					scalar: 1.2,
+					shapes: ['star']
+				});
+
+				confetti.default({
+					...defaults,
+					particleCount: 10,
+					scalar: 0.75,
+					shapes: ['circle']
+				});
+			}
+
+			// Disparar el confeti varias veces
+			setTimeout(shoot, 0);
+			setTimeout(shoot, 100);
+			setTimeout(shoot, 200);
+
+			// Función para alternar la visibilidad del correo
+			function toggleEmailVisibility() {
+				const emailElement = document.querySelector('.winner-email');
+				if (emailElement) {
+					emailElement.classList.toggle('blurred');
+				}
+			}
+
+			main.innerHTML = `
+				<div class="h-full flex items-center justify-center w-full">
+					<div class="w-full max-w-2xl mx-auto  p-6 text-center">
+						<h2 class="text-3xl font-bold text-green-600 mb-4">¡Tenemos un ganador!</h2>
+						<p class="text-xl mb-6">El ganador es:</p>
+						<div class="relative flex items-center justify-center gap-4 mb-8">
+							<p class="text-2xl font-semibold text-blue-600 pulse-animation winner-email ${isProtected ? 'blurred' : ''}">${ganador}</p>
+							${isProtected ? `
+								<button
+									onclick="document.querySelector('.winner-email').classList.toggle('blurred')"
+									class="copy-button bg-blue-600 text-white py-1 px-3 rounded-md text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+								>
+									Mostrar/Ocultar
+								</button>
+							` : ''}
+							<button
+								onclick="copyToClipboard('${ganador}')"
+								class="copy-button bg-gray-600 text-white py-1 px-3 rounded-md text-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+							>
+								<span class="copy-text">Copiar correo</span>
+								<span class="copy-success hidden">¡Copiado!</span>
+							</button>
+						</div>
+						<button
+							onclick="window.location.reload()"
+							class="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+						>
+							Realizar otro sorteo
+						</button>
+					</div>
+				</div>
+			`;
+
+			// Función para copiar al portapapeles
+			function copyToClipboard(text: string) {
+				navigator.clipboard.writeText(text).then(() => {
+					const button = document.querySelector('.copy-button') as HTMLElement;
+					const copyText = button?.querySelector('.copy-text') as HTMLElement;
+					const copySuccess = button?.querySelector('.copy-success') as HTMLElement;
+					
+					if (copyText && copySuccess) {
+						copyText.classList.add('hidden');
+						copySuccess.classList.remove('hidden');
+						
+						setTimeout(() => {
+							copyText.classList.remove('hidden');
+							copySuccess.classList.add('hidden');
+						}, 2000);
+					}
+				}).catch(err => {
+					console.error('Error al copiar al portapapeles:', err);
+					alert('No se pudo copiar el correo al portapapeles');
+				});
+			}
+		}
+
+		const textareaContainer = document.getElementById('textareaContainer');
+		const fileContainer = document.getElementById('fileContainer');
+		const loadTypeInputs = document.querySelectorAll<HTMLInputElement>('input[name="loadType"]');
+
+		loadTypeInputs.forEach(input => {
+			input.addEventListener('change', (e) => {
+				const target = e.target as HTMLInputElement;
+				if (target.value === 'textarea') {
+					textareaContainer?.classList.remove('hidden');
+					fileContainer?.classList.add('hidden');
+				} else {
+					textareaContainer?.classList.add('hidden');
+					fileContainer?.classList.remove('hidden');
+				}
+			});
+		});
+
+		const submitButton = document.getElementById('submitButton');
+		if (submitButton) {
+			submitButton.addEventListener('click', () => {
+				const selectedType = document.querySelector<HTMLInputElement>('input[name="loadType"]:checked')?.value;
+				
+				if (selectedType === 'textarea') {
+					const emailsTextarea = document.getElementById('emails') as HTMLTextAreaElement;
+					const emails = emailsTextarea.value
+						.split('\n')
+						.map(email => email.trim())
+						.filter(email => email.length > 0 && validateEmail(email));
+					
+					if (emails.length === 0) {
+						alert('Por favor ingrese al menos un correo electrónico válido');
+						return;
+					}
+					
+					mostrarAnimacionCarga(emails);
+				} else {
+					const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+					if (!fileInput.files?.length) {
+						alert('Por favor seleccione un archivo');
+						return;
+					}
+					
+					const file = fileInput.files[0];
+					const reader = new FileReader();
+					
+					reader.onload = (e) => {
+						const result = e.target?.result as string;
+						if (!result) {
+							alert('Error al leer el archivo');
+							return;
+						}
+
+						const emails = result
+							.split('\n')
+							.map(email => email.trim())
+							.filter(email => email.length > 0 && validateEmail(email));
+						
+						if (emails.length === 0) {
+							alert('El archivo no contiene correos electrónicos válidos');
+							return;
+						}
+						
+						mostrarAnimacionCarga(emails);
+					};
+					
+					reader.readAsText(file);
+				}
+			});
+		}
+	</script>
 </Layout>
