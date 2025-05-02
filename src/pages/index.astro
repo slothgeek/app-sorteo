@@ -235,7 +235,7 @@ import Layout from '../layouts/Layout.astro';
 
 			main.innerHTML = `
 				<div class="h-full flex items-center justify-center w-full">
-					<div class="w-full max-w-2xl mx-auto  p-6 text-center">
+					<div class="w-full max-w-2xl mx-auto p-6 text-center">
 						<h2 class="text-3xl font-bold text-green-600 mb-4">¡Tenemos un ganador!</h2>
 						<p class="text-xl mb-6">El ganador es:</p>
 						<div class="relative flex items-center justify-center gap-4 mb-8">
@@ -249,7 +249,7 @@ import Layout from '../layouts/Layout.astro';
 								</button>
 							` : ''}
 							<button
-								onclick="copyToClipboard('${ganador}')"
+								id="copyButton"
 								class="copy-button bg-gray-600 text-white py-1 px-3 rounded-md text-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
 							>
 								<span class="copy-text">Copiar correo</span>
@@ -266,25 +266,27 @@ import Layout from '../layouts/Layout.astro';
 				</div>
 			`;
 
-			// Función para copiar al portapapeles
-			function copyToClipboard(text: string) {
-				navigator.clipboard.writeText(text).then(() => {
-					const button = document.querySelector('.copy-button') as HTMLElement;
-					const copyText = button?.querySelector('.copy-text') as HTMLElement;
-					const copySuccess = button?.querySelector('.copy-success') as HTMLElement;
-					
-					if (copyText && copySuccess) {
-						copyText.classList.add('hidden');
-						copySuccess.classList.remove('hidden');
+			// Agregar el evento de copia después de crear el botón
+			const copyButton = document.getElementById('copyButton');
+			if (copyButton) {
+				copyButton.addEventListener('click', () => {
+					navigator.clipboard.writeText(ganador).then(() => {
+						const copyText = copyButton.querySelector('.copy-text') as HTMLElement;
+						const copySuccess = copyButton.querySelector('.copy-success') as HTMLElement;
 						
-						setTimeout(() => {
-							copyText.classList.remove('hidden');
-							copySuccess.classList.add('hidden');
-						}, 2000);
-					}
-				}).catch(err => {
-					console.error('Error al copiar al portapapeles:', err);
-					alert('No se pudo copiar el correo al portapapeles');
+						if (copyText && copySuccess) {
+							copyText.classList.add('hidden');
+							copySuccess.classList.remove('hidden');
+							
+							setTimeout(() => {
+								copyText.classList.remove('hidden');
+								copySuccess.classList.add('hidden');
+							}, 2000);
+						}
+					}).catch(err => {
+						console.error('Error al copiar al portapapeles:', err);
+						alert('No se pudo copiar el correo al portapapeles');
+					});
 				});
 			}
 		}
